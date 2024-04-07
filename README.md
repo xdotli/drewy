@@ -21,6 +21,10 @@ source .venv/bin/activate
 .venv\Scripts\activate
 ```
 
+Create a .streamlit at the project dir, then put OpenAI API Key in the secrets.toml
+```
+OPENAI_API_KEY=""
+```
 
 
 ## Appendix
