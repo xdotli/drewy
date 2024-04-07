@@ -31,16 +31,47 @@ if prompt := st.chat_input("Please enter your instructions"):
         st.markdown(prompt)
 
     with st.chat_message("assistant"):
-        stream = client.chat.completions.create(
-            model=st.session_state["openai_model"],
-            messages=[
-                {"role": m["role"], "content": m["content"]}
-                for m in st.session_state.messages
-            ],
-            stream=True,
+        assistant = client.beta.assistants.retrieve("asst_IntchtGliaxEIXtJke80Whzw")
+        thread = client.beta.threads.create()
+        message = client.beta.threads.messages.create(
+            thread_id=thread.id,
+            role="user",
+            content=prompt
         )
+        run = client.beta.threads.runs.create_and_poll(
+            thread_id=thread.id,
+            assistant_id=assistant.id,
+            instructions=prompt
+        )
+
+        # with client.beta.threads.runs.stream(
+        #     thread_id=thread.id,
+        #     assistant_id=assistant.id,
+        #     instructions="Please address the user as Jane Doe. The user has a premium account.",
+        #     event_handler=EventHandler(),
+        #     ) as stream:
+        #     # stream.until_done()
+            
+
+        # stream = client.chat.completions.create(
+        #     model=st.session_state["openai_model"],
+        #     messages=[
+        #         {"role": m["role"], "content": m["content"]}
+        #         for m in st.session_state.messages
+        #     ],
+        #     stream=True,
+        # )
+        fake_response = st.write_stream(response_generator())
         # response = st.write_stream(stream)
-        response = st.write_stream(response_generator())
+
+        if run.status == 'completed': 
+            messages = client.beta.threads.messages.list(
+                thread_id=thread.id
+            )
+            st.markdown(messages.data[0].content[0])
+        else:
+            st.markdown(run.status)
+
         VIDEO_URL = "https://www.xiangyi.li/titanic.mp4"
         st.video(VIDEO_URL)
-    st.session_state.messages.append({"role": "assistant", "content": response})
+    st.session_state.messages.append({"role": "assistant", "content": messages.data[0].content})
