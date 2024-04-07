@@ -3,16 +3,18 @@ import streamlit as st
 import time
 
 st.title("Drewy")
-st.markdown("Drewy let you control swarms of drones in a simulated environment to accomplish tasks \
-            like drone formation and multi-angle drone photography. ")
+st.markdown("Choreography, photography with drone swarms. ")
 
 client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
 if "openai_model" not in st.session_state:
     st.session_state["openai_model"] = "gpt-3.5-turbo"
 
+with open("instructions.txt", "r") as file:
+    content_in_file = file.read()
+
 if "messages" not in st.session_state:
-    st.session_state.messages = []
+    st.session_state.messages = [{"role": "system", "content": content_in_file}]
 
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
@@ -23,6 +25,8 @@ def response_generator():
     for word in response.split():
         yield word + " "
         time.sleep(0.05)
+
+
 
 if prompt := st.chat_input("Please enter your instructions"):
 
@@ -39,8 +43,8 @@ if prompt := st.chat_input("Please enter your instructions"):
             ],
             stream=True,
         )
-        # response = st.write_stream(stream)
+        fake_response = st.write_stream(stream)
         response = st.write_stream(response_generator())
-        VIDEO_URL = "https://www.xiangyi.li/titanic.mp4"
+        VIDEO_URL = "https://www.xiangyi.li/output1.mp4"
         st.video(VIDEO_URL)
     st.session_state.messages.append({"role": "assistant", "content": response})
